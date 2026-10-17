@@ -1,6 +1,7 @@
 const searchForm = document.querySelector("#search-form");
 const cityInput = document.querySelector("#city-input");
 const searchButton = searchForm.querySelector('button[type="submit"]');
+const locationButton = document.querySelector("#location-button");
 const statusMessage = document.querySelector("#status");
 const currentCard = document.querySelector("#current");
 const forecastSection = document.querySelector("#forecast");
@@ -73,6 +74,30 @@ async function fetchJSON(url, options = {}) {
 // Construye el texto de una ciudad para mostrarla en las sugerencias.
 function getPlaceLabel(place) {
   return [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+}
+
+// Obtiene las coordenadas actuales después de solicitar permiso al navegador.
+function getCurrentPosition() {
+  if (!navigator.geolocation) {
+    return Promise.reject(
+      new Error("La ubicación requiere HTTPS o localhost y un navegador compatible."),
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, (error) => {
+      const messages = {
+        1: "Permite el acceso a tu ubicación para consultar el clima.",
+        2: "No se pudo determinar tu ubicación. Inténtalo de nuevo.",
+        3: "La solicitud de ubicación tardó demasiado. Inténtalo de nuevo.",
+      };
+      reject(new Error(messages[error.code] ?? "No se pudo obtener tu ubicación."));
+    }, {
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: 300000,
+    });
+  });
 }
 
 // Oculta la lista y restablece el estado accesible del combobox.
@@ -202,7 +227,8 @@ function renderCurrent(place, data) {
   const current = data.current;
 
   const title = document.createElement("h2");
-  title.textContent = `${getWeatherEmoji(current.weather_code)} ${place.name}, ${place.country}`;
+  const placeName = place.country ? `${place.name}, ${place.country}` : place.name;
+  title.textContent = `${getWeatherEmoji(current.weather_code)} ${placeName}`;
 
   const temperature = document.createElement("p");
   temperature.textContent = `Temperatura: ${current.temperature_2m} °C`;
@@ -261,6 +287,7 @@ searchForm.addEventListener("submit", async (event) => {
   }
 
   searchButton.disabled = true;
+  locationButton.disabled = true;
   showStatus("Buscando...", "loading");
   try {
     const place = selectedPlace?.label === city
@@ -278,6 +305,38 @@ searchForm.addEventListener("submit", async (event) => {
     showStatus(error.message, "error");
   } finally {
     searchButton.disabled = false;
+    locationButton.disabled = false;
+
+    if (statusMessage.classList.contains("loading")) {
+      hideStatus();
+    }
+  }
+});
+
+locationButton.addEventListener("click", async () => {
+  clearTimeout(suggestionTimer);
+  suggestionController?.abort();
+  selectedPlace = null;
+  hideSuggestions();
+  searchButton.disabled = true;
+  locationButton.disabled = true;
+  showStatus("Obteniendo tu ubicación...", "loading");
+
+  try {
+    const position = await getCurrentPosition();
+    const { latitude, longitude } = position.coords;
+    const weather = await getWeather(latitude, longitude);
+    cityInput.value = "";
+    renderCurrent({ name: "Tu ubicación" }, weather);
+    renderForecast(weather.daily);
+    hideStatus();
+  } catch (error) {
+    currentCard.hidden = true;
+    forecastSection.hidden = true;
+    showStatus(error.message, "error");
+  } finally {
+    searchButton.disabled = false;
+    locationButton.disabled = false;
 
     if (statusMessage.classList.contains("loading")) {
       hideStatus();
