@@ -4,6 +4,27 @@ const searchButton = searchForm.querySelector('button[type="submit"]');
 const statusMessage = document.querySelector("#status");
 const currentCard = document.querySelector("#current");
 const forecastSection = document.querySelector("#forecast");
+const suggestionsList = document.querySelector("#city-suggestions");
+const themeToggle = document.querySelector("#theme-toggle");
+const themeIcon = document.querySelector("#theme-icon");
+const themeLabel = document.querySelector("#theme-label");
+let suggestionTimer;
+let suggestionController;
+let activeSuggestionIndex = -1;
+let selectedPlace = null;
+
+// Cambia el tema y actualiza el nombre accesible del botón.
+function setTheme(theme) {
+  const isDark = theme === "dark";
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  themeToggle.setAttribute("aria-pressed", String(isDark));
+  themeToggle.setAttribute(
+    "aria-label",
+    `Cambiar a modo ${isDark ? "claro" : "oscuro"}`,
+  );
+  themeIcon.textContent = isDark ? "☀" : "☾";
+  themeLabel.textContent = `Modo ${isDark ? "claro" : "oscuro"}`;
+}
 
 // Muestra un mensaje con el estado visual indicado.
 function showStatus(message, type) {
@@ -20,14 +41,14 @@ function hideStatus() {
 }
 
 // Consulta JSON y convierte los fallos de red y HTTP en mensajes claros.
-async function fetchJSON(url) {
+async function fetchJSON(url, options = {}) {
   if (navigator.onLine === false) {
     throw new Error("Sin conexión a internet. Revisa tu red e inténtalo de nuevo");
   }
 
   let response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, options);
   } catch (error) {
     if (error instanceof TypeError || navigator.onLine === false) {
       throw new Error("Sin conexión a internet. Revisa tu red e inténtalo de nuevo");
@@ -47,6 +68,76 @@ async function fetchJSON(url) {
   }
 
   return response.json();
+}
+
+// Construye el texto de una ciudad para mostrarla en las sugerencias.
+function getPlaceLabel(place) {
+  return [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+}
+
+// Oculta la lista y restablece el estado accesible del combobox.
+function hideSuggestions() {
+  suggestionsList.replaceChildren();
+  suggestionsList.hidden = true;
+  cityInput.setAttribute("aria-expanded", "false");
+  cityInput.removeAttribute("aria-activedescendant");
+  activeSuggestionIndex = -1;
+}
+
+// Selecciona una ciudad y busca su clima usando las coordenadas sugeridas.
+function chooseSuggestion(place) {
+  cityInput.value = getPlaceLabel(place);
+  selectedPlace = { ...place, label: cityInput.value };
+  hideSuggestions();
+  searchForm.requestSubmit();
+}
+
+// Consulta y muestra sugerencias después de una breve pausa al escribir.
+async function loadSuggestions(query, signal) {
+  const params = new URLSearchParams({
+    name: query,
+    count: "5",
+    language: "es",
+  });
+
+  try {
+    const data = await fetchJSON(
+      `https://geocoding-api.open-meteo.com/v1/search?${params}`,
+      { signal },
+    );
+
+    if (cityInput.value.trim() !== query || signal.aborted) {
+      return;
+    }
+
+    const places = data.results ?? [];
+    if (places.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+    const options = places.map((place, index) => {
+      const option = document.createElement("button");
+      option.id = `city-suggestion-${index}`;
+      option.type = "button";
+      option.className = "suggestion-option";
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", "false");
+      option.textContent = getPlaceLabel(place);
+      option.addEventListener("mousedown", (event) => event.preventDefault());
+      option.addEventListener("click", () => chooseSuggestion(place));
+      return option;
+    });
+
+    suggestionsList.replaceChildren(...options);
+    suggestionsList.hidden = false;
+    cityInput.setAttribute("aria-expanded", "true");
+  } catch (error) {
+    if (error.name !== "AbortError" && cityInput.value.trim() === query) {
+      hideSuggestions();
+      showStatus(error.message, "error");
+    }
+  }
 }
 
 // Busca las coordenadas de una ciudad.
@@ -157,7 +248,12 @@ searchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const city = cityInput.value.trim();
 
+  clearTimeout(suggestionTimer);
+  suggestionController?.abort();
+  hideSuggestions();
+
   if (!city) {
+    selectedPlace = null;
     currentCard.hidden = true;
     forecastSection.hidden = true;
     showStatus("Escribe el nombre de una ciudad", "error");
@@ -167,7 +263,10 @@ searchForm.addEventListener("submit", async (event) => {
   searchButton.disabled = true;
   showStatus("Buscando...", "loading");
   try {
-    const place = await getCoordinates(city);
+    const place = selectedPlace?.label === city
+      ? selectedPlace
+      : await getCoordinates(city);
+    selectedPlace = null;
     const weather = await getWeather(place.latitude, place.longitude);
     renderCurrent(place, weather);
     renderForecast(weather.daily);
@@ -185,3 +284,66 @@ searchForm.addEventListener("submit", async (event) => {
     }
   }
 });
+
+cityInput.addEventListener("input", () => {
+  selectedPlace = null;
+  clearTimeout(suggestionTimer);
+  suggestionController?.abort();
+  hideSuggestions();
+
+  if (statusMessage.classList.contains("error")) {
+    hideStatus();
+  }
+
+  const query = cityInput.value.trim();
+  if (query.length < 2) {
+    return;
+  }
+
+  suggestionTimer = setTimeout(() => {
+    suggestionController = new AbortController();
+    loadSuggestions(query, suggestionController.signal);
+  }, 300);
+});
+
+cityInput.addEventListener("keydown", (event) => {
+  const options = [...suggestionsList.querySelectorAll('[role="option"]')];
+  if (options.length === 0) {
+    return;
+  }
+
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const direction = event.key === "ArrowDown" ? 1 : -1;
+    activeSuggestionIndex =
+      (activeSuggestionIndex + direction + options.length) % options.length;
+
+    options.forEach((option, index) => {
+      const isActive = index === activeSuggestionIndex;
+      option.setAttribute("aria-selected", String(isActive));
+      if (isActive) {
+        cityInput.setAttribute("aria-activedescendant", option.id);
+      }
+    });
+  } else if (event.key === "Enter" && activeSuggestionIndex >= 0) {
+    event.preventDefault();
+    options[activeSuggestionIndex].click();
+  } else if (event.key === "Escape") {
+    hideSuggestions();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".search-area")) {
+    clearTimeout(suggestionTimer);
+    suggestionController?.abort();
+    hideSuggestions();
+  }
+});
+
+themeToggle.addEventListener("click", () => {
+  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  setTheme(nextTheme);
+});
+
+setTheme("light");
