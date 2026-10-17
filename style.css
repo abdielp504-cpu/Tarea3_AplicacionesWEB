@@ -6,6 +6,7 @@
   --accent-deep: #c65c35;
   --line: #e5eceb;
   --paper: #fffefa;
+  --sky: #e9f3f3;
   --error-bg: #fff0ed;
   --error-ink: #963e35;
   --loading-bg: #edf6f8;
@@ -146,6 +147,7 @@ h1 {
   display: flex;
   gap: 10px;
   width: 100%;
+  max-width: 560px;
   margin: 0;
   padding: 7px;
   border: 1px solid var(--line);
