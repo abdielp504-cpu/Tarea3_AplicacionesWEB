@@ -8,12 +8,36 @@
 </head>
 <body>
   <main class="container">
+    <button
+      id="theme-toggle"
+      class="theme-toggle"
+      type="button"
+      aria-label="Cambiar a modo oscuro"
+      aria-pressed="false"
+    >
+      <span id="theme-icon" aria-hidden="true">☾</span>
+      <span id="theme-label">Modo oscuro</span>
+    </button>
+
     <h1>Clima</h1>
 
-    <form id="search-form">
-      <input type="text" id="city-input" placeholder="Busca una ciudad..." autocomplete="off">
-      <button type="submit">Buscar</button>
-    </form>
+    <div class="search-area">
+      <form id="search-form">
+        <input
+          type="text"
+          id="city-input"
+          placeholder="Busca una ciudad..."
+          autocomplete="off"
+          role="combobox"
+          aria-label="Nombre de la ciudad"
+          aria-autocomplete="list"
+          aria-expanded="false"
+          aria-controls="city-suggestions"
+        >
+        <button type="submit">Buscar</button>
+      </form>
+      <div id="city-suggestions" class="suggestions" role="listbox" aria-label="Ciudades sugeridas" hidden></div>
+    </div>
 
     <p id="status" class="status" hidden></p>
 
