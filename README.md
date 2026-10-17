@@ -2,7 +2,6 @@
 
 Aplicación web sencilla para consultar el clima actual y el pronóstico de los próximos siete días de una ciudad.
 
-![Captura](screenshot.png)
 
 ## API utilizada
 
@@ -66,7 +65,6 @@ Al ocurrir un error, se ocultan las tarjetas anteriores. El botón de búsqueda 
 ├── app.js       # Búsqueda, solicitudes a Open-Meteo y renderizado de resultados
 ├── index.html   # Estructura de la aplicación
 ├── README.md    # Documentación del proyecto
-├── screenshot.png # Imagen de captura (opcional; agregar para mostrarla aquí)
 └── style.css    # Estilos y diseño adaptable
 ```
 
@@ -78,6 +76,6 @@ En este proyecto utilicé las siguientes herramientas de IA:
 |---|---|
 | Claude (Anthropic) | Planeación del proyecto, elección de la API (Open-Meteo), plan de commits y redacción de prompts. |
 | GitHub Copilot (Agent mode, VS Code) | Generación de código base en `style.css` y `app.js`, y borrador de este README. |
-| Gemini (Google) | Apoyo con ideas y diseño. |
+| Gemini (Google) | Apoyo con ideas, errores en la terminal, investigacion de la API. |
 
-**Qué hice yo:** creé el repositorio, estructuré el proyecto, revisé y probé el código generado, realicé los commits e integré y ajusté el diseño, la búsqueda y las funciones de clima.
+**Qué hice yo:** creé el repositorio, estructuré el proyecto, investigue la API, revisé errores y probé el código generado, realicé los commits e integré y ajusté el diseño, la búsqueda y las funciones de clima.
