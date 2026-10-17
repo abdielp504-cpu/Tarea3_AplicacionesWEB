@@ -1,0 +1,228 @@
+:root {
+  color-scheme: light;
+  --color-ink: #19354a;
+  --color-muted: #617a8b;
+  --color-accent: #e87942;
+  --color-accent-dark: #bd5527;
+  --color-surface: rgba(255, 255, 255, 0.82);
+  --color-surface-solid: #fffdf9;
+  --color-border: rgba(38, 82, 107, 0.14);
+  --color-error-bg: #fee8e5;
+  --color-error-text: #8e2d27;
+  --color-loading-bg: #e3f2f8;
+  --shadow-card: 0 18px 48px rgba(29, 68, 91, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 48px 20px;
+  color: var(--color-ink);
+  background:
+    radial-gradient(ellipse at 82% 8%, rgba(255, 213, 157, 0.55), transparent 34rem),
+    linear-gradient(145deg, #e8f5f8 0%, #f5f8f4 48%, #fff0dc 100%);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.container {
+  width: min(100%, 600px);
+  margin: 0 auto;
+  padding: 28px;
+}
+
+h1 {
+  margin: 0 0 28px;
+  color: var(--color-ink);
+  font-size: clamp(2.5rem, 9vw, 4rem);
+  font-weight: 750;
+  letter-spacing: -0.075em;
+  line-height: 1;
+  text-align: center;
+}
+
+#search-form {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.88);
+  box-shadow: 0 8px 26px rgba(29, 68, 91, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+#city-input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  outline: none;
+  color: var(--color-ink);
+  background: transparent;
+  font: inherit;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+#city-input::placeholder {
+  color: #8ca0aa;
+}
+
+#city-input:focus {
+  border-color: rgba(232, 121, 66, 0.55);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(232, 121, 66, 0.14);
+}
+
+#search-form button {
+  flex: 0 0 auto;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--color-accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+#search-form button:hover {
+  background: var(--color-accent-dark);
+  box-shadow: 0 6px 14px rgba(189, 85, 39, 0.24);
+  transform: translateY(-1px);
+}
+
+#search-form button:active {
+  transform: translateY(0);
+}
+
+#search-form button:focus-visible {
+  outline: 3px solid rgba(232, 121, 66, 0.38);
+  outline-offset: 3px;
+}
+
+.status {
+  margin: 18px 0 0;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: var(--color-ink);
+  line-height: 1.5;
+}
+
+.status.error {
+  border-color: rgba(142, 45, 39, 0.12);
+  color: var(--color-error-text);
+  background: var(--color-error-bg);
+}
+
+.status.loading {
+  border-color: rgba(46, 115, 150, 0.12);
+  background: var(--color-loading-bg);
+}
+
+.card {
+  margin-top: 22px;
+  padding: clamp(24px, 6vw, 38px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  backdrop-filter: blur(16px);
+}
+
+.card h2,
+.card h3,
+.card p {
+  margin-top: 0;
+}
+
+.card h2 {
+  margin-bottom: 8px;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  letter-spacing: -0.04em;
+}
+
+.card p {
+  margin-bottom: 10px;
+  color: var(--color-muted);
+}
+
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.forecast > * {
+  min-width: 0;
+  padding: 16px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(29, 68, 91, 0.08);
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+
+.forecast h2,
+.forecast h3,
+.forecast p {
+  margin: 0 0 8px;
+}
+
+.forecast p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 24px 12px;
+  }
+
+  .container {
+    padding: 20px 8px;
+  }
+
+  h1 {
+    margin-bottom: 22px;
+  }
+
+  #search-form {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  #city-input {
+    padding: 12px 10px;
+  }
+
+  #search-form button {
+    padding: 0 15px;
+  }
+
+  .forecast {
+    gap: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
