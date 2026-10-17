@@ -229,6 +229,47 @@ h1 {
   outline-offset: -2px;
 }
 
+.location-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px auto 0;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--input-surface);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease,
+    transform 160ms ease, opacity 160ms ease;
+}
+
+.location-button span {
+  color: var(--accent-deep);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.location-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--loading-bg);
+  transform: translateY(-1px);
+}
+
+.location-button:focus-visible {
+  outline: 3px solid rgba(231, 124, 75, 0.4);
+  outline-offset: 3px;
+}
+
+.location-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 #search-form button {
   flex: 0 0 auto;
   min-width: 106px;
