@@ -18,6 +18,8 @@ La aplicación busca primero la ciudad para obtener sus coordenadas y después c
 - Búsqueda de ciudades y obtención de sus coordenadas.
 - Consulta de temperatura, humedad, viento y estado actual del clima.
 - Pronóstico de siete días con el día de la semana, un emoji y temperaturas máximas y mínimas.
+- Sugerencias de ciudades al escribir y opción para consultar el clima de tu ubicación actual.
+- Alternancia entre tema claro y oscuro.
 - Indicadores de carga y mensajes para errores de conexión, servicios HTTP y ciudades no encontradas.
 - Diseño adaptable a pantallas móviles y de escritorio.
 
@@ -34,6 +36,8 @@ No requiere instalación de dependencias ni una API key.
 2. Abre la carpeta del proyecto y luego abre `index.html` en un navegador.
 
 También puedes abrir la carpeta del proyecto en Visual Studio Code y usar la extensión **Live Server** para iniciar la aplicación.
+
+Para usar la ubicación actual, abre la aplicación desde `localhost` o una conexión HTTPS y concede permiso al navegador.
 
 ## Tecnologías
 
