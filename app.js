@@ -1,8 +1,53 @@
 const searchForm = document.querySelector("#search-form");
 const cityInput = document.querySelector("#city-input");
+const searchButton = searchForm.querySelector('button[type="submit"]');
 const statusMessage = document.querySelector("#status");
 const currentCard = document.querySelector("#current");
 const forecastSection = document.querySelector("#forecast");
+
+// Muestra un mensaje con el estado visual indicado.
+function showStatus(message, type) {
+  statusMessage.textContent = message;
+  statusMessage.className = `status ${type}`;
+  statusMessage.hidden = false;
+}
+
+// Oculta y limpia el mensaje de estado.
+function hideStatus() {
+  statusMessage.hidden = true;
+  statusMessage.textContent = "";
+  statusMessage.className = "status";
+}
+
+// Consulta JSON y convierte los fallos de red y HTTP en mensajes claros.
+async function fetchJSON(url) {
+  if (navigator.onLine === false) {
+    throw new Error("Sin conexión a internet. Revisa tu red e inténtalo de nuevo");
+  }
+
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    if (error instanceof TypeError || navigator.onLine === false) {
+      throw new Error("Sin conexión a internet. Revisa tu red e inténtalo de nuevo");
+    }
+
+    throw error;
+  }
+
+  if (response.status === 429) {
+    throw new Error("Demasiadas peticiones. Espera un momento e inténtalo de nuevo");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `El servicio no está disponible (error ${response.status}). Inténtalo más tarde`,
+    );
+  }
+
+  return response.json();
+}
 
 // Busca las coordenadas de una ciudad.
 async function getCoordinates(city) {
@@ -11,17 +56,11 @@ async function getCoordinates(city) {
     count: "1",
     language: "es",
   });
-  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
-
-  if (!response.ok) {
-    throw new Error("No se pudo buscar la ciudad.");
-  }
-
-  const data = await response.json();
+  const data = await fetchJSON(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
   const place = data.results?.[0];
 
   if (!place) {
-    throw new Error("No se encontró la ciudad.");
+    throw new Error(`No se encontró la ciudad "${city}"`);
   }
 
   return place;
@@ -37,13 +76,7 @@ async function getWeather(lat, lon) {
     forecast_days: "7",
     timezone: "auto",
   });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-
-  if (!response.ok) {
-    throw new Error("No se pudo obtener el clima.");
-  }
-
-  const data = await response.json();
+  const data = await fetchJSON(`https://api.open-meteo.com/v1/forecast?${params}`);
 
   if (!data.current || !data.daily) {
     throw new Error("No hay datos del clima disponibles.");
@@ -122,22 +155,33 @@ function renderForecast(daily) {
 // Busca la ciudad y muestra su clima actual.
 searchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  statusMessage.hidden = true;
+  const city = cityInput.value.trim();
 
+  if (!city) {
+    currentCard.hidden = true;
+    forecastSection.hidden = true;
+    showStatus("Escribe el nombre de una ciudad", "error");
+    return;
+  }
+
+  searchButton.disabled = true;
+  showStatus("Buscando...", "loading");
   try {
-    statusMessage.className = "status loading";
-    statusMessage.textContent = "Buscando el clima...";
-    statusMessage.hidden = false;
-
-    const place = await getCoordinates(cityInput.value.trim());
+    const place = await getCoordinates(city);
     const weather = await getWeather(place.latitude, place.longitude);
     renderCurrent(place, weather);
     renderForecast(weather.daily);
 
-    statusMessage.hidden = true;
+    hideStatus();
   } catch (error) {
-    statusMessage.className = "status error";
-    statusMessage.textContent = error.message;
-    statusMessage.hidden = false;
+    currentCard.hidden = true;
+    forecastSection.hidden = true;
+    showStatus(error.message, "error");
+  } finally {
+    searchButton.disabled = false;
+
+    if (statusMessage.classList.contains("loading")) {
+      hideStatus();
+    }
   }
 });
